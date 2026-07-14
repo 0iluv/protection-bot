@@ -8,7 +8,7 @@ const {
 } = require("discord.js");
 
 const fs = require("fs");
-
+const { REST, Routes } = require("discord.js");
 const client = new Client({
   intents: [GatewayIntentBits.Guilds],
 });
@@ -25,8 +25,27 @@ for (const file of commandFiles) {
   client.commands.set(command.data.name, command);
 }
 
-client.once(Events.ClientReady, () => {
+client.once(Events.ClientReady, async () => {
   console.log(`✅ ${client.user.tag} está online!`);
+
+  const commands = [];
+
+  client.commands.forEach(command => {
+    commands.push(command.data.toJSON());
+  });
+
+  const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
+
+  try {
+    await rest.put(
+      Routes.applicationCommands(process.env.CLIENT_ID),
+      { body: commands }
+    );
+
+    console.log("✅ Comandos registrados!");
+  } catch (err) {
+    console.error(err);
+  }
 });
 
 client.on(Events.InteractionCreate, async interaction => {
